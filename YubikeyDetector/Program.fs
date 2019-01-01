@@ -40,6 +40,16 @@ let onEventRaised (evt: EventArrivedEventArgs) =
     | "3" -> onDeviceDisconnected()
     | _ -> ()
 
+let onSessionSwitch _ (evt: SessionSwitchEventArgs) =
+    printfn "Session %A" evt.Reason
+
+    match evt.Reason with
+    | SessionSwitchReason.SessionLogon
+    | SessionSwitchReason.SessionUnlock -> 
+        if yubikeys.Count = 0
+        then lockSession()
+    | _ -> ()
+
 [<EntryPoint>]
 let main _ =
     use watcher = new ManagementEventWatcher()
@@ -50,6 +60,8 @@ let main _ =
 
     onDeviceConnected ()
     debugSession ()
+
+    SystemEvents.SessionSwitch.AddHandler(SessionSwitchEventHandler(onSessionSwitch));
 
     Console.ReadLine() |> ignore
 
